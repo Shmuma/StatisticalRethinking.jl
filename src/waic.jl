@@ -4,7 +4,7 @@
 Compute the Widely Applicable Information Criterion (WAIC).
 
 # Arguments
-* `ll::AbstractArray`       : A vector of posterior log likelihoods
+* `ll::AbstractMatrix`      : A matrix of posterior log likelihoods with (samples, observations) shape
 * `pointwise::Bool`         : Compute WAIC pointwise, return a vector
 
 
@@ -17,33 +17,22 @@ Compute the Widely Applicable Information Criterion (WAIC).
     std_err                 : Standard error of pointwise waic values
 
 """
-function waic(ll::AbstractArray; pointwise=false)
-
+function waic(ll::AbstractMatrix; pointwise=false)
     n_samples, n_obs = size(ll)
-    pD = zeros(n_obs);
-
+    pD = var2.(eachcol(ll))
     lpd = reshape(logsumexp(ll .- log(n_samples); dims=1), n_obs);
-    for i in 1:n_obs
-        pD[i] = var2(ll[:,i])
-    end
 
-    waic_vec = (-2) .* ( lpd - pD );
-    if pointwise == false
+    waic_vec = -2 * (lpd - pD);
+    if pointwise
+        waics = waic_vec
+    else
         waics = sum(waic_vec)
         lpd = sum(lpd)
         pD = sum(pD)
-    else
-        waics = waic_vec
     end
 
-    local se
-    try
-        se = sqrt( n_obs*var2(waic_vec) )
-    catch e
-        println(e)
-        se = nothing
-    end
-
+    se = n_obs*var2(waic_vec)
+    se = se < 0.0 ? nothing : sqrt(se)
     (WAIC=waics, lppd=lpd, penalty=pD, std_err=se)
 end
 
