@@ -3,7 +3,7 @@ using StatisticalRethinking
 using Test
 
 
-tests = ["srtools", "link", "simulate", "lppd"]
+tests = ["srtools", "link", "simulate", "lppd", "waic"]
 stan_tests = ["wd-loo-compare",]
 
 stan_exists()::Bool = "JULIA_CMDSTAN_HOME" in keys(ENV)
